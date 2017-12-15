@@ -1,7 +1,7 @@
 package com.main;
 
 import com.bean.FieldBean;
-import com.bean.MatchKeyBean;
+import com.command.DefaultCommand;
 import com.utils.FileUtils;
 import com.utils.OtherUtils;
 
@@ -18,26 +18,13 @@ public class TestMain {
         // map是
         Map<Integer, FieldBean> fieldBeanMap = OtherUtils.analysisJavabeanFileToMap("E:\\idea work\\JavaBeanDemo.java", "UTF-8");
         StringBuffer fileStringBuffer = FileUtils.read("E:\\idea work\\demo.jsp", "UTF-8");
-        MatchKeyBean matchKeyBean = OtherUtils.indexFirstMatchKey("[&foreach&]", "[/&foreach&]", fileStringBuffer.toString());
-        StringBuilder buildTmpBuilder = new StringBuilder();
-        String tplString=matchKeyBean.getPrintString();
-        for (Map.Entry<Integer, FieldBean> entry : fieldBeanMap.entrySet()) {
-            FieldBean fieldBean = entry.getValue();
-            if (fieldBean.getFieldCode() != null && fieldBean.getFieldName() != null) {
-                String tmp=tplString.replace("[&fieldName]", fieldBean.getFieldName());
-                tmp=tmp.replace("[&fieldCode]",fieldBean.getFieldCode());
-                buildTmpBuilder = buildTmpBuilder.append(tmp);
-            }
-        }
-//        System.out.println(buildTmpBuilder);
-        fileStringBuffer.delete(matchKeyBean.getStartKeyIndex(),matchKeyBean.getEndStringIndex());
-        fileStringBuffer.insert(matchKeyBean.getStartKeyIndex(),buildTmpBuilder);
+        fileStringBuffer=DefaultCommand.foreachCommand(fieldBeanMap, fileStringBuffer,2);
         FileUtils.save(fileStringBuffer.toString(),"E:\\idea work\\dataProductList2.jsp","UTF-8");
         System.out.println(fileStringBuffer);
-      /*  if (matchKeyBean !=null){
-            System.out.println(matchKeyBean);
-        }*/
+
     }
+
+
 
 
     //删除
