@@ -22,5 +22,13 @@ public class TplConstants {
      * 字段code 普通 匹配符
      */
     public static final String FIELD_CODE_NORMAL =  "[&fieldCode]";
+    /**
+     * 字段name 首字母大写 匹配符
+     */
+    public static final String FIELD_NAME_UPPER_CASE=  "[&FieldName]";
+    /**
+     * 字段code 首字母大写 匹配符
+     */
+    public static final String FIELD_CODE_UPPER_CASE =  "[&FieldCode]";
 
 }

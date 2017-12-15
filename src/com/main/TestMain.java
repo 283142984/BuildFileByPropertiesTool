@@ -17,9 +17,9 @@ public class TestMain {
     public static void main(String[] args) {
         // map是
         Map<Integer, FieldBean> fieldBeanMap = OtherUtils.analysisJavabeanFileToMap("E:\\idea work\\JavaBeanDemo.java", "UTF-8");
-        StringBuffer fileStringBuffer = FileUtils.read("E:\\idea work\\demo.jsp", "UTF-8");
+        StringBuffer fileStringBuffer = FileUtils.read("E:\\idea work\\GetSetDemo.java", "UTF-8");
         fileStringBuffer=DefaultCommand.foreachCommand(fieldBeanMap, fileStringBuffer,2);
-        FileUtils.save(fileStringBuffer.toString(),"E:\\idea work\\dataProductList2.jsp","UTF-8");
+        FileUtils.save(fileStringBuffer.toString(),"E:\\idea work\\GetSetDemo2.java","UTF-8");
         System.out.println(fileStringBuffer);
 
     }

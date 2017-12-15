@@ -37,8 +37,15 @@ public class DefaultCommand {
             for (Map.Entry<Integer, FieldBean> entry : fieldBeanMap.entrySet()) {
                 FieldBean fieldBean = entry.getValue();
                 if (fieldBean.getFieldCode() != null && fieldBean.getFieldName() != null) {
-                    String tmp = tplString.replace(TplConstants.FIELD_NAME_NORMAL, fieldBean.getFieldName());
-                    tmp = tmp.replace(TplConstants.FIELD_CODE_NORMAL, fieldBean.getFieldCode());
+                    String tmp=tplString;
+                    String fieldName=fieldBean.getFieldName();
+                    String fieldCode=fieldBean.getFieldCode();
+                    String upperFieldName=fieldName.substring(0,1).toUpperCase()+fieldName.substring(1,fieldName.length());
+                    String upperFieldCode=fieldCode.substring(0,1).toUpperCase()+fieldCode.substring(1,fieldCode.length());
+                    tmp = tmp.replace(TplConstants.FIELD_NAME_NORMAL, fieldName);
+                    tmp = tmp.replace(TplConstants.FIELD_CODE_NORMAL, fieldCode);
+                    tmp = tmp.replace(TplConstants.FIELD_NAME_UPPER_CASE, upperFieldName);
+                    tmp = tmp.replace(TplConstants.FIELD_CODE_UPPER_CASE, upperFieldCode);
                     buildTmpBuffer = buildTmpBuffer.append(tmp);
                 }
             }
