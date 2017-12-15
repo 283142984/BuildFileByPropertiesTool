@@ -15,11 +15,12 @@ import java.util.Map;
  */
 public class DefaultCommand {
     /**
+     *  默认命令 foreach 如果匹配不到foreach即结束
      * @param fieldBeanMap     利用OtherUtils.analysisJavabeanFileToMap解析的bean对应map
      * @param fileStringBuffer 要处理的String
      * @param useNumber        调用次数 如果小于0也默认为1
      * @author 庄学文
-     * @title 默认命令 foreach
+     * @return StringBuffer
      */
     public static StringBuffer foreachCommand(Map<Integer, FieldBean> fieldBeanMap, StringBuffer fileStringBuffer, int useNumber) {
         if (useNumber <= 0) {
@@ -54,6 +55,6 @@ public class DefaultCommand {
      * @title 默认命令 foreach
      */
     public static StringBuffer foreachCommand(Map<Integer, FieldBean> fieldBeanMap, StringBuffer fileStringBuffer) {
-        return foreachCommand(fieldBeanMap, fileStringBuffer);
+        return foreachCommand(fieldBeanMap, fileStringBuffer,1);
     }
 }
