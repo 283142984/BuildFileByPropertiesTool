@@ -15,15 +15,25 @@ import java.util.Map;
  */
 public class TestMain {
     public static void main(String[] args) {
-        // map是
-        Map<Integer, FieldBean> fieldBeanMap = OtherUtils.analysisJavabeanFileToMap("E:\\idea work\\JavaBeanDemo.java", "UTF-8");
-        StringBuffer fileStringBuffer = FileUtils.read("E:\\idea work\\GetSetDemo.java", "UTF-8");
-        fileStringBuffer=DefaultCommand.foreachCommand(fieldBeanMap, fileStringBuffer,2);
-        FileUtils.save(fileStringBuffer.toString(),"E:\\idea work\\GetSetDemo2.java","UTF-8");
-        System.out.println(fileStringBuffer);
-
+        testUpperCaseForeach();
+        testLowerCaseForeach();
     }
 
+    public static void testLowerCaseForeach() {
+        Map<Integer, FieldBean> fieldBeanMap = OtherUtils.analysisJavabeanFileToMap("E:\\idea work\\JavaBeanDemo.java", "UTF-8");
+        StringBuffer fileStringBuffer = FileUtils.read("E:\\idea work\\GetSetDemo.java", "UTF-8");
+        fileStringBuffer = DefaultCommand.foreachCommand(fieldBeanMap, fileStringBuffer, 2);
+        FileUtils.save(fileStringBuffer.toString(), "E:\\idea work\\GetSetDemo2.java", "UTF-8");
+        System.out.println(fileStringBuffer);
+    }
+
+    public static void testUpperCaseForeach() {
+        Map<Integer, FieldBean> fieldBeanMap = OtherUtils.analysisJavabeanFileToMap("E:\\idea work\\JavaBeanDemo.java", "UTF-8");
+        StringBuffer fileStringBuffer = FileUtils.read("E:\\idea work\\demo.jsp", "UTF-8");
+        fileStringBuffer = DefaultCommand.foreachCommand(fieldBeanMap, fileStringBuffer, 2);
+        FileUtils.save(fileStringBuffer.toString(), "E:\\idea work\\demo2.jsp", "UTF-8");
+        System.out.println(fileStringBuffer);
+    }
 
 
 

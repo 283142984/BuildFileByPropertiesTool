@@ -3,6 +3,7 @@ package com.utils;
 import com.bean.FieldBean;
 import com.bean.MatchKeyBean;
 
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -24,6 +25,15 @@ public class OtherUtils {
      */
     static Pattern FIELD_CODE_PATTERN = Pattern.compile("private.*;");
 
+    /**
+     * 找到输入中startkey和endkey对应的位置并组装成MatchKeyBean对象返回
+     *
+     * @param startKey    开始字符 （要和结束字符配对）
+     * @param endKey      结束字符
+     * @param inputString 输入String
+     * @return MatchKeyBean
+     * @author 庄学文
+     */
     public static MatchKeyBean indexFirstMatchKey(String startKey, String endKey, String inputString) {
         MatchKeyBean matchKeyBean = new MatchKeyBean();
         int firstForeachIndexStart = inputString.indexOf(startKey);
@@ -42,6 +52,14 @@ public class OtherUtils {
         return matchKeyBean;
     }
 
+    /**
+     * 解析javabean的文件目录成一个Map<Integer 索引位置，FieldBean 字段对应bean>
+     *
+     * @param pathName        文件绝对路径
+     * @param readCharsetName 文件编码
+     * @return Map<Integer 索引位置，FieldBean 字段对应bean>
+     * @author 庄学文
+     */
     public static Map<Integer, FieldBean> analysisJavabeanFileToMap(String pathName, String readCharsetName) {
         Map<Integer, FieldBean> map = new LinkedHashMap<>();
         try {
@@ -83,5 +101,38 @@ public class OtherUtils {
             e.printStackTrace();
             return null;
         }
+    }
+
+    /**
+     * 替换第一次遇到字符
+     *
+     * @param inputString 输入字符
+     * @param target      替换字符命令 支持多个可以用逗号隔开 如 \t,\n
+     * @param replacement 替换成字符   只支持一个
+     * @param fromIndex   开始索引位置
+     * @return Map<Integer 索引位置，FieldBean 字段对应bean>
+     * @author 庄学文
+     */
+    public static String replaceFirstString(String inputString, String target, String replacement, int fromIndex) {
+        if (inputString == null || target == null || replacement == null) {
+            throw new NullPointerException("替换第一次遇到字符 转入参数有空");
+        }
+        if (fromIndex < 0) {
+            fromIndex = 0;
+        }
+        int replacementLength = replacement.length();
+        StringBuilder out = new StringBuilder(inputString);
+        String[] targetSplit = target.split(",");
+        System.out.println(Arrays.toString(targetSplit));
+//        if(targetSplit)
+        for (int i = 0; i < targetSplit.length; i++) {
+            String tmpTarget = targetSplit[i];
+            int index = out.indexOf(tmpTarget, fromIndex);
+            if (index >= 0) {
+                out.delete(index, index + tmpTarget.length()).insert(index, replacement);
+                fromIndex = fromIndex - (tmpTarget.length() - replacementLength);
+            }
+        }
+        return out.toString();
     }
 }
