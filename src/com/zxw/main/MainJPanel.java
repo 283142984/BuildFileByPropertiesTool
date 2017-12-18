@@ -1,7 +1,9 @@
 package com.zxw.main;
 
+import com.zxw.bean.FieldBean;
 import com.zxw.bean.PathPaneBean;
 import com.zxw.bean.ReNamePaneBean;
+import com.zxw.command.DefaultCommand;
 import com.zxw.utils.FileUtils;
 import com.zxw.utils.OtherUtils;
 
@@ -35,11 +37,12 @@ public class MainJPanel extends JPanel {
 
     public Map<Integer, ReNamePaneBean> reNamePaneBeanMap = new LinkedHashMap<>();//保存reName对象 Map
     public Map<String, PathPaneBean> pathPaneBeanMap = new ConcurrentHashMap<>();//保存path文件路径对象 Map
-    public Map<String, String> propertiesMap = null;
+    private Map<Integer, FieldBean> fieldBeanMap = null;//保存bean文件路径对象 Map
+    public Map<String, String> propertiesMap = null;//保存配置文件配置对象 Map
     private JButton reloadFileNameOldButton = new JButton("重写文件名");
     private JButton replaceOldButton = new JButton("原文替换");
     private JButton copyAndReplaceButton = new JButton("复制并且替换");
-    private String CharsetName = "UTF-8";
+    private String charsetName = "UTF-8";
     private MainJPanel mainJPanel;//自身引用
 
     public MainJPanel() {
@@ -103,9 +106,9 @@ public class MainJPanel extends JPanel {
                             File dir = chooser.getSelectedFile();
                             propertiesMap = OtherUtils.loadConf(dir.getAbsolutePath());
                             if (propertiesMap == null) {
-                                JOptionPane.showMessageDialog(null, "配置读取失败！去重新选择", "错误", JOptionPane.ERROR_MESSAGE);
+                                JOptionPane.showMessageDialog(null, "配置读取失败！请重新选择", "错误", JOptionPane.ERROR_MESSAGE);
                             }
-                            String tplPath = propertiesMap.get("tplPath");
+                            String tplPath = propertiesMap.get("tplPath_criterion");
                             pathPaneBeanMap = new ConcurrentHashMap<>();
                             File file = new File(tplPath);
                             File[] fList = file.listFiles();
@@ -122,6 +125,11 @@ public class MainJPanel extends JPanel {
                                         pathPaneBeanMap.put(f.getName(), new PathPaneBean(new JTextArea(f.getAbsolutePath()), new JTextArea("")));
                                     }
                                 }
+                            }
+                            String beanPath = propertiesMap.get("beanPath_criterion");
+                            fieldBeanMap = OtherUtils.analysisJavabeanFileToMap(beanPath, charsetName);
+                            if (fieldBeanMap == null) {
+                                JOptionPane.showMessageDialog(null, "配置bean信息读取失败！请重新选择", "错误", JOptionPane.ERROR_MESSAGE);
                             }
                             loadCenterPathPanel();
                             stopped = false;
@@ -179,7 +187,7 @@ public class MainJPanel extends JPanel {
                     if (oldfileName.trim().equals("") || newfileName.trim().equals("")) {
                         newFilePath = beforeFileNamePath + "copy_" + fileName;
                     } else {
-                        fileName = fileName.replaceAll(oldfileName, newfileName);
+                        fileName = fileName.replace(oldfileName, newfileName);
                         newFilePath = beforeFileNamePath + fileName;
                     }
                     pathPaneBean.getNewPathNametextArea().setText((newFilePath));
@@ -192,6 +200,9 @@ public class MainJPanel extends JPanel {
         replaceOldButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+            }
+            //TODO预留
+            /*{
                 if (reNamePaneBeanMap.size() == 0) {
                     JOptionPane.showMessageDialog(null, "没有添加设置要替换的字段！", "错误", JOptionPane.ERROR_MESSAGE);
                     return;
@@ -203,26 +214,26 @@ public class MainJPanel extends JPanel {
                 for (String key : pathPaneBeanMap.keySet()) {
                     PathPaneBean pathPaneBean = pathPaneBeanMap.get(key);
                     String filePath = pathPaneBean.getOldPathNametextArea().getText();
-                    String fileContent = FileUtils.read(filePath, CharsetName).toString();
+                    String fileContent = FileUtils.read(filePath, charsetName).toString();
                     for (Integer k : reNamePaneBeanMap.keySet()) {
                         ReNamePaneBean reNamePaneBean = reNamePaneBeanMap.get(k);
-                        fileContent = fileContent.replaceAll(reNamePaneBean.getOldNametextArea().getText(),
+                        fileContent = fileContent.replace(reNamePaneBean.getOldNametextArea().getText(),
                                 reNamePaneBean.getNewNametextArea().getText());
 
                     }
-                    FileUtils.save(fileContent, filePath, CharsetName);
+                    FileUtils.save(fileContent, filePath, charsetName);
                 }
                 JOptionPane.showMessageDialog(null, "成功替换！", "成功", JOptionPane.OK_OPTION);
 
-            }
+            }*/
         });
         copyAndReplaceButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (reNamePaneBeanMap.size() == 0) {
+         /*       if (reNamePaneBeanMap.size() == 0) {
                     JOptionPane.showMessageDialog(null, "没有添加设置要替换的字段！", "错误", JOptionPane.ERROR_MESSAGE);
                     return;
-                }
+                }*/
                 if (pathPaneBeanMap.size() == 0) {
                     JOptionPane.showMessageDialog(null, "没有选定文件！", "错误", JOptionPane.ERROR_MESSAGE);
                     return;
@@ -234,14 +245,17 @@ public class MainJPanel extends JPanel {
 
                     FileUtils.fileChannelCopy(new File(oldfilePath), new File(newfilePath));
 
-                    String fileContent = FileUtils.read(newfilePath, CharsetName).toString();
+
+                    StringBuffer stringBuffer = FileUtils.read(pathPaneBean.getOldPathNametextArea().getText(), charsetName);
+                    stringBuffer = DefaultCommand.foreachCommand(fieldBeanMap, stringBuffer);
+                    String fileContent = stringBuffer.toString();
                     for (Integer k : reNamePaneBeanMap.keySet()) {
                         ReNamePaneBean reNamePaneBean = reNamePaneBeanMap.get(k);
-                        fileContent = fileContent.replaceAll(reNamePaneBean.getOldNametextArea().getText(),
+                        fileContent = fileContent.replace(reNamePaneBean.getOldNametextArea().getText(),
                                 reNamePaneBean.getNewNametextArea().getText());
 
                     }
-                    FileUtils.save(fileContent, newfilePath, CharsetName);
+                    FileUtils.save(fileContent, newfilePath, charsetName);
                 }
                 JOptionPane.showMessageDialog(null, "成功复制并且替换！", "成功", JOptionPane.OK_OPTION);
 
@@ -390,12 +404,29 @@ public class MainJPanel extends JPanel {
 
             centerPathPanel.add(pathPaneBean.getOldPathNametextArea());
             pathPaneBean.getOldPathNametextArea().setLineWrap(true);
-            s.gridwidth = 0;// 该方法是设置组件水平所占用的格子数，如果为0，就说明该组件是该行的最后一个
+            s.gridwidth = 1;// 该方法是设置组件水平所占用的格子数，如果为0，就说明该组件是该行的最后一个
             s.weightx = 1;// 该方法设置组件水平的拉伸幅度，如果为0就说明不拉伸，不为0就随着窗口增大进行拉伸，0到1之间
             s.weighty = 0;// 该方法设置组件垂直的拉伸幅度，如果为0就说明不拉伸，不为0就随着窗口增大进行拉伸，0到1之间
             layout.setConstraints(pathPaneBean.getOldPathNametextArea(), s);// 设置组件
 
-            JLabel newPathLabel = new JLabel("复制到:");
+            JButton readJButton = new JButton("查看模板文件");
+            readJButton.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    readFileToTextArea(pathPaneBean.getOldPathNametextArea().getText());
+                }
+
+            });
+            readJButton.setPreferredSize(new Dimension(100, 30));
+            centerPathPanel.add(readJButton);
+
+            s.gridwidth = 0;// 该方法是设置组件水平所占用的格子数，如果为0，就说明该组件是该行的最后一个
+            s.weightx = 0;// 该方法设置组件水平的拉伸幅度，如果为0就说明不拉伸，不为0就随着窗口增大进行拉伸，0到1之间
+            s.weighty = 0;// 该方法设置组件垂直的拉伸幅度，如果为0就说明不拉伸，不为0就随着窗口增大进行拉伸，0到1之间
+            layout.setConstraints(readJButton, s);// 设置组件
+
+
+            JLabel newPathLabel = new JLabel("生成到:");
             newPathLabel.setPreferredSize(new Dimension(150, 20));
             s.gridwidth = 1;// 该方法是设置组件水平所占用的格子数，如果为0，就说明该组件是该行的最后一个
             s.weightx = 0;// 该方法设置组件水平的拉伸幅度，如果为0就说明不拉伸，不为0就随着窗口增大进行拉伸，0到1之间
@@ -405,10 +436,40 @@ public class MainJPanel extends JPanel {
             centerPathPanel.add(newPathLabel);
             centerPathPanel.add(pathPaneBean.getNewPathNametextArea());
             pathPaneBean.getNewPathNametextArea().setLineWrap(true);
-            s.gridwidth = 0;// 该方法是设置组件水平所占用的格子数，如果为0，就说明该组件是该行的最后一个
+            s.gridwidth = 1;// 该方法是设置组件水平所占用的格子数，如果为0，就说明该组件是该行的最后一个
             s.weightx = 1;// 该方法设置组件水平的拉伸幅度，如果为0就说明不拉伸，不为0就随着窗口增大进行拉伸，0到1之间
             s.weighty = 0;// 该方法设置组件垂直的拉伸幅度，如果为0就说明不拉伸，不为0就随着窗口增大进行拉伸，0到1之间
             layout.setConstraints(pathPaneBean.getNewPathNametextArea(), s);// 设置组件
+
+            JButton previewJButton = new JButton("预览输出文件");
+            previewJButton.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    previewOutFileToTextArea(pathPaneBean);
+                }
+            });
+            previewJButton.setPreferredSize(new Dimension(100, 30));
+            centerPathPanel.add(previewJButton);
+
+            s.gridwidth = 1;// 该方法是设置组件水平所占用的格子数，如果为0，就说明该组件是该行的最后一个
+            s.weightx = 0;// 该方法设置组件水平的拉伸幅度，如果为0就说明不拉伸，不为0就随着窗口增大进行拉伸，0到1之间
+            s.weighty = 0;// 该方法设置组件垂直的拉伸幅度，如果为0就说明不拉伸，不为0就随着窗口增大进行拉伸，0到1之间
+            layout.setConstraints(previewJButton, s);// 设置组件
+
+            JButton deleteJButton = new JButton("删除");
+            deleteJButton.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    deletePathPaneBean(key);
+                }
+            });
+            deleteJButton.setPreferredSize(new Dimension(100, 30));
+            centerPathPanel.add(deleteJButton);
+
+            s.gridwidth = 0;// 该方法是设置组件水平所占用的格子数，如果为0，就说明该组件是该行的最后一个
+            s.weightx = 0;// 该方法设置组件水平的拉伸幅度，如果为0就说明不拉伸，不为0就随着窗口增大进行拉伸，0到1之间
+            s.weighty = 0;// 该方法设置组件垂直的拉伸幅度，如果为0就说明不拉伸，不为0就随着窗口增大进行拉伸，0到1之间
+            layout.setConstraints(deleteJButton, s);// 设置组件
             //分割线
             JPanel tmpPanel = new JPanel();
             tmpPanel.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.GRAY));
@@ -456,7 +517,13 @@ public class MainJPanel extends JPanel {
     }
 
     public void readFileToTextArea(String file) {
-        textArea.setText(FileUtils.read(file, CharsetName).toString());
+        textArea.setText(FileUtils.read(file, charsetName).toString());
+    }
+
+    public void previewOutFileToTextArea(PathPaneBean pathPaneBean) {
+        StringBuffer stringBuffer = FileUtils.read(pathPaneBean.getOldPathNametextArea().getText(), charsetName);
+        stringBuffer = DefaultCommand.foreachCommand(fieldBeanMap, stringBuffer);
+        textArea.setText(stringBuffer.toString());
     }
 
 }
