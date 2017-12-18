@@ -1,9 +1,9 @@
-package com.main;
+package com.zxw.main;
 
-import com.bean.FieldBean;
-import com.command.DefaultCommand;
-import com.utils.FileUtils;
-import com.utils.OtherUtils;
+import com.zxw.bean.FieldBean;
+import com.zxw.command.DefaultCommand;
+import com.zxw.utils.FileUtils;
+import com.zxw.utils.OtherUtils;
 
 import java.util.Map;
 
@@ -15,8 +15,9 @@ import java.util.Map;
  */
 public class TestMain {
     public static void main(String[] args) {
-        testUpperCaseForeach();
-        testLowerCaseForeach();
+        OtherUtils.loadConf(args[0]);
+        /*testUpperCaseForeach();
+        testLowerCaseForeach();*/
     }
 
     public static void testLowerCaseForeach() {

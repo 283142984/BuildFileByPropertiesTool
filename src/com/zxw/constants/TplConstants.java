@@ -1,4 +1,4 @@
-package com.constants;
+package com.zxw.constants;
 /**
  * @author 庄学文
  * @title 模板常量，未来写成可以配置，现在可以作为默认值

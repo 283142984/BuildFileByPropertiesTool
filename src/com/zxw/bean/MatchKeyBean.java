@@ -1,4 +1,4 @@
-package com.bean;
+package com.zxw.bean;
 
 /**
  * @author 庄学文

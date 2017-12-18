@@ -1,11 +1,10 @@
-package com.utils;
+package com.zxw.utils;
 
-import com.bean.FieldBean;
-import com.bean.MatchKeyBean;
+import com.zxw.bean.FieldBean;
+import com.zxw.bean.MatchKeyBean;
 
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.io.*;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -57,7 +56,7 @@ public class OtherUtils {
      *
      * @param pathName        文件绝对路径
      * @param readCharsetName 文件编码
-     * @return Map<Integer 索引位置，FieldBean 字段对应bean>
+     * @return Map<Integer                                                               索引位置                               ，                               FieldBean                                                               字段对应bean>
      * @author 庄学文
      */
     public static Map<Integer, FieldBean> analysisJavabeanFileToMap(String pathName, String readCharsetName) {
@@ -110,7 +109,7 @@ public class OtherUtils {
      * @param target      替换字符命令 支持多个可以用逗号隔开 如 \t,\n
      * @param replacement 替换成字符   只支持一个
      * @param fromIndex   开始索引位置
-     * @return Map<Integer 索引位置，FieldBean 字段对应bean>
+     * @return Map<Integer                                                               索引位置                               ，                               FieldBean                                                               字段对应bean>
      * @author 庄学文
      */
     public static String replaceFirstString(String inputString, String target, String replacement, int fromIndex) {
@@ -134,5 +133,37 @@ public class OtherUtils {
             }
         }
         return out.toString();
+    }
+
+    public static Map<String, String> loadConf(String path) {
+        if (path == null || path.trim().equals("") || !path.endsWith(".properties")) {
+            return null;
+        }
+        Map<String, String> propsMap = new HashMap<>();
+        Properties props = new Properties();
+        InputStreamReader reader = null;
+        try {
+            reader = new InputStreamReader(new FileInputStream(path));
+            props.load(reader);
+            Iterator<String> it = props.stringPropertyNames().iterator();
+            while (it.hasNext()) {
+                String key = it.next();
+                propsMap.put(key, props.getProperty(key));
+                System.out.println(key + ":" + props.getProperty(key));
+            }
+            reader.close();
+        } catch (Exception e) {
+            System.err.println(e);
+        } finally {
+            try {
+                if (reader != null) {
+                    reader.close();
+                }
+            } catch (IOException e) {
+                System.err.println(e);
+            }
+            return propsMap;
+        }
+
     }
 }

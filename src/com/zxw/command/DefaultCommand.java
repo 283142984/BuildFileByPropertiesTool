@@ -1,9 +1,9 @@
-package com.command;
+package com.zxw.command;
 
-import com.bean.FieldBean;
-import com.bean.MatchKeyBean;
-import com.constants.TplConstants;
-import com.utils.OtherUtils;
+import com.zxw.bean.FieldBean;
+import com.zxw.bean.MatchKeyBean;
+import com.zxw.constants.TplConstants;
+import com.zxw.utils.OtherUtils;
 
 import java.util.Map;
 
