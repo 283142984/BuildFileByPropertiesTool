@@ -23,6 +23,7 @@ public class MainJPanel extends JPanel {
     private JButton browseButton = new JButton("选择配置文件");
     private JButton chooseJavaBeanButton = new JButton("重选javaBean文件");
     private JButton addReNameButton = new JButton("添加替换字段");
+    private JButton addTplFileButton = new JButton("添加模板文件");
     private JPanel northPanel = new JPanel();
     private JPanel centerPanel = new JPanel();
     private JPanel centerPathPanel = new JPanel();//中间右方路径设置区域
@@ -31,8 +32,8 @@ public class MainJPanel extends JPanel {
     //    private Map<Integer, String> pathIndexes = new HashMap<Integer, String>();
     public JTextArea oldFileNameTextArea = new JTextArea();//旧文件名Po
     public JTextArea newFileNameTextArea = new JTextArea();//新文件名Po
-    private JLabel oldFileNameLabel = new JLabel("旧文件Po名:");
-    private JLabel newFileNameLabel = new JLabel("新文件Po名:");
+    private JLabel oldFileNameLabel = new JLabel("文件旧字段:");
+    private JLabel newFileNameLabel = new JLabel("文件替换后字段:");
     public JTextArea textArea;//底部文本显示
 
     public Map<Integer, ReNamePaneBean> reNamePaneBeanMap = new LinkedHashMap<>();//保存reName对象 Map
@@ -40,8 +41,8 @@ public class MainJPanel extends JPanel {
     private Map<Integer, FieldBean> fieldBeanMap = null;//保存bean文件路径对象 Map
     public Map<String, String> propertiesMap = null;//保存配置文件配置对象 Map
     private JButton reloadFileNameOldButton = new JButton("重写文件名");
-    private JButton replaceOldButton = new JButton("原文替换");
-    private JButton copyAndReplaceButton = new JButton("复制并且替换");
+    private JButton buildPropertiesButton = new JButton("生成新配置文件");
+    private JButton outButton = new JButton("生成文件");
     private String charsetName = "UTF-8";
     private MainJPanel mainJPanel;//自身引用
 
@@ -67,8 +68,8 @@ public class MainJPanel extends JPanel {
         centerPanel.add(centerButtonPanel, BorderLayout.SOUTH);
         centerButtonPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
         centerButtonPanel.add(reloadFileNameOldButton);
-        centerButtonPanel.add(replaceOldButton);
-        centerButtonPanel.add(copyAndReplaceButton);
+        centerButtonPanel.add(buildPropertiesButton);
+        centerButtonPanel.add(outButton);
 
 
         JScrollPane pane = new JScrollPane(centerPathPanel);
@@ -159,37 +160,56 @@ public class MainJPanel extends JPanel {
                 loadNorthPanel();
             }
         });
+        //添加模板文件
+        addTplFileButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
 
+                // 选择配置文件
+                final JFileChooser chooser = new JFileChooser();
+                chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+                int result = chooser.showOpenDialog(MainJPanel.this);
+
+                if (result == JFileChooser.APPROVE_OPTION) {
+                    Thread t = new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            File f = chooser.getSelectedFile();
+                            String propertiesPath = propertiesMap.get(f.getName());
+                            if (propertiesPath != null) {
+                                pathPaneBeanMap.put(f.getName(), new PathPaneBean(new JTextArea(f.getAbsolutePath()), new JTextArea(propertiesPath)));
+                            } else {
+                                //TODO:默认位置未来处理
+                                pathPaneBeanMap.put(f.getName(), new PathPaneBean(new JTextArea(f.getAbsolutePath()), new JTextArea("")));
+                            }
+                            loadCenterPathPanel();
+                        }
+                    });
+                    t.start();
+                }
+
+            }
+        });
 
         reloadFileNameOldButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-
+                String oldFileName = oldFileNameTextArea.getText();
+                String newFileName = newFileNameTextArea.getText();
                 for (String key : pathPaneBeanMap.keySet()) {
                     PathPaneBean pathPaneBean = pathPaneBeanMap.get(key);
-                    String oldfilePath = pathPaneBean.getOldPathNametextArea().getText();
-
-                    String oldfileName = oldFileNameTextArea.getText();
-                    String newfileName = newFileNameTextArea.getText();
-
-                    String newFilePath = oldfilePath;
-
-                    String beforeFileNamePath = newFilePath.substring(0, newFilePath.lastIndexOf("\\") + 1);
-                    String fileName = newFilePath.substring(newFilePath.lastIndexOf("\\") + 1);
-                    if (oldfileName.trim().equals("") || newfileName.trim().equals("")) {
-                        newFilePath = beforeFileNamePath + "copy_" + fileName;
-                    } else {
-                        fileName = fileName.replace(oldfileName, newfileName);
-                        newFilePath = beforeFileNamePath + fileName;
+                    String newFilePath = pathPaneBean.getNewPathNameTextArea().getText();
+                    if (newFilePath == null || newFilePath.trim().equals("")) {
+                        continue;
                     }
-                    pathPaneBean.getNewPathNametextArea().setText((newFilePath));
-
+                    newFilePath = newFilePath.replace(oldFileName, newFileName);
+                    pathPaneBean.getNewPathNameTextArea().setText(newFilePath);
+                    loadCenterPathPanel();
                 }
-
                 JOptionPane.showMessageDialog(null, "成功刷新！", "成功", JOptionPane.OK_OPTION);
             }
         });
-        replaceOldButton.addActionListener(new ActionListener() {
+        buildPropertiesButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
             }
@@ -205,7 +225,7 @@ public class MainJPanel extends JPanel {
                 }
                 for (String key : pathPaneBeanMap.keySet()) {
                     PathPaneBean pathPaneBean = pathPaneBeanMap.get(key);
-                    String filePath = pathPaneBean.getOldPathNametextArea().getText();
+                    String filePath = pathPaneBean.getOldPathNameTextArea().getText();
                     String fileContent = FileUtils.read(filePath, charsetName).toString();
                     for (Integer k : reNamePaneBeanMap.keySet()) {
                         ReNamePaneBean reNamePaneBean = reNamePaneBeanMap.get(k);
@@ -219,7 +239,7 @@ public class MainJPanel extends JPanel {
 
             }*/
         });
-        copyAndReplaceButton.addActionListener(new ActionListener() {
+        outButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
          /*       if (reNamePaneBeanMap.size() == 0) {
@@ -232,14 +252,14 @@ public class MainJPanel extends JPanel {
                 }
                 for (String key : pathPaneBeanMap.keySet()) {
                     PathPaneBean pathPaneBean = pathPaneBeanMap.get(key);
-                    String oldfilePath = pathPaneBean.getOldPathNametextArea().getText();
-                    String newfilePath = pathPaneBean.getNewPathNametextArea().getText().trim();
+                    String oldFilePath = pathPaneBean.getOldPathNameTextArea().getText();
+                    String newFilePath = pathPaneBean.getNewPathNameTextArea().getText().trim();
 
-                    FileUtils.fileChannelCopy(new File(oldfilePath), new File(newfilePath));
+                    FileUtils.fileChannelCopy(new File(oldFilePath), new File(newFilePath));
                     String fileContent = getBuildString(pathPaneBean);
-                    FileUtils.save(fileContent, newfilePath, charsetName);
+                    FileUtils.save(fileContent, newFilePath, charsetName);
                 }
-                JOptionPane.showMessageDialog(null, "成功复制并且替换！", "成功", JOptionPane.OK_OPTION);
+                JOptionPane.showMessageDialog(null, "成功生成文件！", "成功", JOptionPane.OK_OPTION);
 
 
             }
@@ -273,7 +293,7 @@ public class MainJPanel extends JPanel {
 
     //生产的逻辑
     private String getBuildString(PathPaneBean pathPaneBean) {
-        StringBuffer stringBuffer = FileUtils.read(pathPaneBean.getOldPathNametextArea().getText(), charsetName);
+        StringBuffer stringBuffer = FileUtils.read(pathPaneBean.getOldPathNameTextArea().getText(), charsetName);
         stringBuffer = DefaultCommand.foreachCommand(fieldBeanMap, stringBuffer);
         String fileContent = stringBuffer.toString();
         for (Integer k : reNamePaneBeanMap.keySet()) {
@@ -316,6 +336,13 @@ public class MainJPanel extends JPanel {
         s.weighty = 0;// 该方法设置组件垂直的拉伸幅度，如果为0就说明不拉伸，不为0就随着窗口增大进行拉伸，0到1之间
         layout.setConstraints(chooseJavaBeanButton, s);// 设置组件
         northPanel.add(chooseJavaBeanButton);
+
+        addTplFileButton.setPreferredSize(new Dimension(150, 25));
+        s.gridwidth = 1;// 该方法是设置组件水平所占用的格子数，如果为0，就说明该组件是该行的最后一个
+        s.weightx = 0;// 该方法设置组件水平的拉伸幅度，如果为0就说明不拉伸，不为0就随着窗口增大进行拉伸，0到1之间
+        s.weighty = 0;// 该方法设置组件垂直的拉伸幅度，如果为0就说明不拉伸，不为0就随着窗口增大进行拉伸，0到1之间
+        layout.setConstraints(addTplFileButton, s);// 设置组件
+        northPanel.add(addTplFileButton);
 
         addReNameButton.setPreferredSize(new Dimension(150, 25));
         s.gridwidth = 0;// 该方法是设置组件水平所占用的格子数，如果为0，就说明该组件是该行的最后一个
@@ -432,18 +459,33 @@ public class MainJPanel extends JPanel {
             s.weighty = 0;// 该方法设置组件垂直的拉伸幅度，如果为0就说明不拉伸，不为0就随着窗口增大进行拉伸，0到1之间
             layout.setConstraints(oldPathLabel, s);// 设置组件
 
-            centerPathPanel.add(pathPaneBean.getOldPathNametextArea());
-            pathPaneBean.getOldPathNametextArea().setLineWrap(true);
+            centerPathPanel.add(pathPaneBean.getOldPathNameTextArea());
+            pathPaneBean.getOldPathNameTextArea().setLineWrap(true);
             s.gridwidth = 1;// 该方法是设置组件水平所占用的格子数，如果为0，就说明该组件是该行的最后一个
             s.weightx = 1;// 该方法设置组件水平的拉伸幅度，如果为0就说明不拉伸，不为0就随着窗口增大进行拉伸，0到1之间
             s.weighty = 0;// 该方法设置组件垂直的拉伸幅度，如果为0就说明不拉伸，不为0就随着窗口增大进行拉伸，0到1之间
-            layout.setConstraints(pathPaneBean.getOldPathNametextArea(), s);// 设置组件
+            layout.setConstraints(pathPaneBean.getOldPathNameTextArea(), s);// 设置组件
+
+            JButton deleteJButton = new JButton("删除");
+            deleteJButton.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    deletePathPaneBean(key);
+                }
+            });
+            deleteJButton.setPreferredSize(new Dimension(100, 30));
+            centerPathPanel.add(deleteJButton);
+
+            s.gridwidth = 1;// 该方法是设置组件水平所占用的格子数，如果为0，就说明该组件是该行的最后一个
+            s.weightx = 0;// 该方法设置组件水平的拉伸幅度，如果为0就说明不拉伸，不为0就随着窗口增大进行拉伸，0到1之间
+            s.weighty = 0;// 该方法设置组件垂直的拉伸幅度，如果为0就说明不拉伸，不为0就随着窗口增大进行拉伸，0到1之间
+            layout.setConstraints(deleteJButton, s);// 设置组件
 
             JButton readJButton = new JButton("查看模板文件");
             readJButton.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    readFileToTextArea(pathPaneBean.getOldPathNametextArea().getText());
+                    readFileToTextArea(pathPaneBean.getOldPathNameTextArea().getText());
                 }
 
             });
@@ -464,12 +506,29 @@ public class MainJPanel extends JPanel {
             layout.setConstraints(newPathLabel, s);// 设置组件
 
             centerPathPanel.add(newPathLabel);
-            centerPathPanel.add(pathPaneBean.getNewPathNametextArea());
-            pathPaneBean.getNewPathNametextArea().setLineWrap(true);
+            centerPathPanel.add(pathPaneBean.getNewPathNameTextArea());
+            pathPaneBean.getNewPathNameTextArea().setLineWrap(true);
             s.gridwidth = 1;// 该方法是设置组件水平所占用的格子数，如果为0，就说明该组件是该行的最后一个
             s.weightx = 1;// 该方法设置组件水平的拉伸幅度，如果为0就说明不拉伸，不为0就随着窗口增大进行拉伸，0到1之间
             s.weighty = 0;// 该方法设置组件垂直的拉伸幅度，如果为0就说明不拉伸，不为0就随着窗口增大进行拉伸，0到1之间
-            layout.setConstraints(pathPaneBean.getNewPathNametextArea(), s);// 设置组件
+            layout.setConstraints(pathPaneBean.getNewPathNameTextArea(), s);// 设置组件
+
+
+            JButton chooseOutPathJButton = new JButton("重选输出位置");
+            chooseOutPathJButton.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    chooseOutPath(pathPaneBean);
+                }
+            });
+            chooseOutPathJButton.setPreferredSize(new Dimension(100, 30));
+            centerPathPanel.add(chooseOutPathJButton);
+
+            s.gridwidth = 1;// 该方法是设置组件水平所占用的格子数，如果为0，就说明该组件是该行的最后一个
+            s.weightx = 0;// 该方法设置组件水平的拉伸幅度，如果为0就说明不拉伸，不为0就随着窗口增大进行拉伸，0到1之间
+            s.weighty = 0;// 该方法设置组件垂直的拉伸幅度，如果为0就说明不拉伸，不为0就随着窗口增大进行拉伸，0到1之间
+            layout.setConstraints(chooseOutPathJButton, s);// 设置组件
+
 
             JButton previewJButton = new JButton("预览输出文件");
             previewJButton.addActionListener(new ActionListener() {
@@ -481,25 +540,12 @@ public class MainJPanel extends JPanel {
             previewJButton.setPreferredSize(new Dimension(100, 30));
             centerPathPanel.add(previewJButton);
 
-            s.gridwidth = 1;// 该方法是设置组件水平所占用的格子数，如果为0，就说明该组件是该行的最后一个
+            s.gridwidth = 0;// 该方法是设置组件水平所占用的格子数，如果为0，就说明该组件是该行的最后一个
             s.weightx = 0;// 该方法设置组件水平的拉伸幅度，如果为0就说明不拉伸，不为0就随着窗口增大进行拉伸，0到1之间
             s.weighty = 0;// 该方法设置组件垂直的拉伸幅度，如果为0就说明不拉伸，不为0就随着窗口增大进行拉伸，0到1之间
             layout.setConstraints(previewJButton, s);// 设置组件
 
-            JButton deleteJButton = new JButton("删除");
-            deleteJButton.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    deletePathPaneBean(key);
-                }
-            });
-            deleteJButton.setPreferredSize(new Dimension(100, 30));
-            centerPathPanel.add(deleteJButton);
 
-            s.gridwidth = 0;// 该方法是设置组件水平所占用的格子数，如果为0，就说明该组件是该行的最后一个
-            s.weightx = 0;// 该方法设置组件水平的拉伸幅度，如果为0就说明不拉伸，不为0就随着窗口增大进行拉伸，0到1之间
-            s.weighty = 0;// 该方法设置组件垂直的拉伸幅度，如果为0就说明不拉伸，不为0就随着窗口增大进行拉伸，0到1之间
-            layout.setConstraints(deleteJButton, s);// 设置组件
             //分割线
             JPanel tmpPanel = new JPanel();
             tmpPanel.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.GRAY));
@@ -560,5 +606,24 @@ public class MainJPanel extends JPanel {
         textArea.setText(fileContent);
     }
 
+    public void chooseOutPath(PathPaneBean pathPaneBean) {
+        // 选择配置文件
+        final JFileChooser chooser = new JFileChooser();
+        chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        int result = chooser.showOpenDialog(MainJPanel.this);
+
+        if (result == JFileChooser.APPROVE_OPTION) {
+            Thread t = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    File dir = chooser.getSelectedFile();
+                    JTextArea newPathNameTextArea = pathPaneBean.getNewPathNameTextArea();
+                    newPathNameTextArea.setText(dir.getAbsolutePath() + "\\"
+                            + FileUtils.getFileNameByPathString(newPathNameTextArea.getText()));
+                }
+            });
+            t.start();
+        }
+    }
 }
 

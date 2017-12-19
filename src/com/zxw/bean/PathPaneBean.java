@@ -10,32 +10,32 @@ import java.io.Serializable;
 public class PathPaneBean implements Serializable {
 
     private JTextArea oldPathNametextArea = new JTextArea();//原文件目录
-    private JTextArea newPathNametextArea = new JTextArea();//新文件目录
+    private JTextArea newPathNameTextArea = new JTextArea();//新文件目录
 
     public PathPaneBean() {
     }
 
     public PathPaneBean(JTextArea oldPathNametextArea,
-                        JTextArea newPathNametextArea) {
+                        JTextArea newPathNameTextArea) {
         super();
         this.oldPathNametextArea = oldPathNametextArea;
-        this.newPathNametextArea = newPathNametextArea;
+        this.newPathNameTextArea = newPathNameTextArea;
     }
 
-    public JTextArea getOldPathNametextArea() {
+    public JTextArea getOldPathNameTextArea() {
         return oldPathNametextArea;
     }
 
-    public void setOldPathNametextArea(JTextArea oldPathNametextArea) {
-        this.oldPathNametextArea = oldPathNametextArea;
+    public void setOldPathNametextArea(JTextArea oldPathNameTextArea) {
+        this.oldPathNametextArea = oldPathNameTextArea;
     }
 
-    public JTextArea getNewPathNametextArea() {
-        return newPathNametextArea;
+    public JTextArea getNewPathNameTextArea() {
+        return newPathNameTextArea;
     }
 
-    public void setNewPathNametextArea(JTextArea newPathNametextArea) {
-        this.newPathNametextArea = newPathNametextArea;
+    public void setNewPathNameTextArea(JTextArea newPathNameTextArea) {
+        this.newPathNameTextArea = newPathNameTextArea;
     }
 
 }
