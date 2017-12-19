@@ -164,6 +164,5 @@ public class OtherUtils {
             }
             return propsMap;
         }
-
     }
 }

@@ -8,12 +8,16 @@ import com.zxw.utils.FileUtils;
 import com.zxw.utils.OtherUtils;
 
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class MainJPanel extends JPanel {
@@ -45,6 +49,8 @@ public class MainJPanel extends JPanel {
     private JButton outButton = new JButton("生成文件");
     private String charsetName = "UTF-8";
     private MainJPanel mainJPanel;//自身引用
+    private String tplPath;
+    private String beanPath;
 
     public MainJPanel() {
         initGui();
@@ -98,6 +104,7 @@ public class MainJPanel extends JPanel {
                 final JFileChooser chooser = new JFileChooser();
 //                chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
                 chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+                chooser.setFileFilter(new FileNameExtensionFilter("properties", new String[]{"properties"}));
                 int result = chooser.showOpenDialog(MainJPanel.this);
 
                 if (result == JFileChooser.APPROVE_OPTION) {
@@ -109,7 +116,7 @@ public class MainJPanel extends JPanel {
                             if (propertiesMap == null) {
                                 JOptionPane.showMessageDialog(null, "配置读取失败！请重新选择", "错误", JOptionPane.ERROR_MESSAGE);
                             }
-                            String tplPath = propertiesMap.get("tplPath_criterion");
+                            tplPath = propertiesMap.get("tplPath_criterion");
                             pathPaneBeanMap = new ConcurrentHashMap<>();
                             File file = new File(tplPath);
                             File[] fList = file.listFiles();
@@ -127,7 +134,7 @@ public class MainJPanel extends JPanel {
                                     }
                                 }
                             }
-                            String beanPath = propertiesMap.get("beanPath_criterion");
+                            beanPath = propertiesMap.get("beanPath_criterion");
                             fieldBeanMap = OtherUtils.analysisJavabeanFileToMap(beanPath, charsetName);
                             if (fieldBeanMap == null) {
                                 JOptionPane.showMessageDialog(null, "配置bean信息读取失败！手动选择javabean", "错误", JOptionPane.ERROR_MESSAGE);
@@ -165,7 +172,7 @@ public class MainJPanel extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
 
-                // 选择配置文件
+                // 添加模板文件
                 final JFileChooser chooser = new JFileChooser();
                 chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
                 int result = chooser.showOpenDialog(MainJPanel.this);
@@ -212,6 +219,39 @@ public class MainJPanel extends JPanel {
         buildPropertiesButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                Properties props = new Properties();
+                props.setProperty("tplPath_criterion", tplPath);
+                props.setProperty("beanPath_criterion", beanPath);
+                for (Map.Entry<String, PathPaneBean> entry : pathPaneBeanMap.entrySet()) {
+                    props.setProperty(entry.getKey(), entry.getValue().getOldPathNameTextArea().getText());
+                }
+                JFileChooser fc = new JFileChooser();
+                fc.setSelectedFile(new File("a.properties")); //设置默认文件名
+                fc.setDialogTitle("保存文件");
+                fc.setMultiSelectionEnabled(false);
+//                fc.showSaveDialog(fc);
+                fc.showDialog(fc, "保存文件");
+                if (fc.getSelectedFile() == null) {
+                    JOptionPane.showMessageDialog(null, "没有选定文件！", "错误", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                FileOutputStream oFile = null;
+                try {
+                    oFile = new FileOutputStream(fc.getSelectedFile().getPath());
+                    props.store(oFile, "buildByTool");
+                    JOptionPane.showMessageDialog(null, "成功！", "成功", JOptionPane.OK_OPTION);
+                    oFile.close();
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                } finally {
+                    try {
+                        if (oFile != null) {
+                            oFile.close();
+                        }
+                    } catch (IOException e1) {
+                        e1.printStackTrace();
+                    }
+                }
             }
             //TODO：预留
             /*{
@@ -278,7 +318,8 @@ public class MainJPanel extends JPanel {
                 @Override
                 public void run() {
                     File dir = chooser.getSelectedFile();
-                    fieldBeanMap = OtherUtils.analysisJavabeanFileToMap(dir.getAbsolutePath(), charsetName);
+                    beanPath = dir.getAbsolutePath();
+                    fieldBeanMap = OtherUtils.analysisJavabeanFileToMap(beanPath, charsetName);
                     if (fieldBeanMap == null) {
                         JOptionPane.showMessageDialog(null, "配置bean信息读取失败！请重新选择", "错误", JOptionPane.ERROR_MESSAGE);
                         return;
