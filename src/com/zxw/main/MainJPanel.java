@@ -23,7 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class MainJPanel extends JPanel {
     private static final long serialVersionUID = 1L;
     static JFrame frame;
-    JLabel javaBeanNameLabel = new JLabel("JavaBean:未选择");
+    JTextArea javaBeanNameTextArea = new JTextArea("");
     private JButton browseButton = new JButton("选择配置文件");
     private JButton chooseJavaBeanButton = new JButton("重选javaBean文件");
     private JButton addReNameButton = new JButton("添加替换字段");
@@ -139,8 +139,8 @@ public class MainJPanel extends JPanel {
                             if (fieldBeanMap == null) {
                                 JOptionPane.showMessageDialog(null, "配置bean信息读取失败！手动选择javabean", "错误", JOptionPane.ERROR_MESSAGE);
                             }
-                            String beanName = beanPath.substring(beanPath.lastIndexOf("\\") + 1);
-                            javaBeanNameLabel.setText("JavaBean:" + beanName);
+//                            String beanName = beanPath.substring(beanPath.lastIndexOf("\\") + 1);
+                            javaBeanNameTextArea.setText(beanPath);
                             loadCenterPathPanel();
                         }
                     });
@@ -294,8 +294,12 @@ public class MainJPanel extends JPanel {
                     PathPaneBean pathPaneBean = pathPaneBeanMap.get(key);
                     String oldFilePath = pathPaneBean.getOldPathNameTextArea().getText();
                     String newFilePath = pathPaneBean.getNewPathNameTextArea().getText().trim();
-
-                    FileUtils.fileChannelCopy(new File(oldFilePath), new File(newFilePath));
+                    File newFile = new File(newFilePath);
+                    File fileParent = newFile.getParentFile();
+                    if (!fileParent.exists()) {
+                        fileParent.mkdirs();
+                    }
+                    FileUtils.fileChannelCopy(new File(oldFilePath), newFile);
                     String fileContent = getBuildString(pathPaneBean);
                     FileUtils.save(fileContent, newFilePath, charsetName);
                 }
@@ -308,27 +312,39 @@ public class MainJPanel extends JPanel {
 
     //选择javabean文件读取配置到Map
     private void loadJavaBeanFile() {
-        // 选择配置文件
-        final JFileChooser chooser = new JFileChooser();
-        chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-        int result = chooser.showOpenDialog(MainJPanel.this);
+        // 如果上面目录有路径就直接使用
+        String javaBeanPathStr=javaBeanNameTextArea.getText();
+        if(javaBeanPathStr!=null&&!javaBeanPathStr.trim().equals("")){
+            beanPath=javaBeanPathStr;
+            fieldBeanMap = OtherUtils.analysisJavabeanFileToMap(beanPath, charsetName);
+            if (fieldBeanMap == null) {
+                JOptionPane.showMessageDialog(null, "配置bean信息读取失败！请重新选择", "错误", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            JOptionPane.showMessageDialog(null, "通过自定义路径重加载成功，如果需要通过目录选请清空自定义路径栏", "成功说明", JOptionPane.OK_OPTION);
+        }
+        else {
+            final JFileChooser chooser = new JFileChooser();
+            chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+            int result = chooser.showOpenDialog(MainJPanel.this);
 
-        if (result == JFileChooser.APPROVE_OPTION) {
-            Thread t = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    File dir = chooser.getSelectedFile();
-                    beanPath = dir.getAbsolutePath();
-                    fieldBeanMap = OtherUtils.analysisJavabeanFileToMap(beanPath, charsetName);
-                    if (fieldBeanMap == null) {
-                        JOptionPane.showMessageDialog(null, "配置bean信息读取失败！请重新选择", "错误", JOptionPane.ERROR_MESSAGE);
-                        return;
+            if (result == JFileChooser.APPROVE_OPTION) {
+                Thread t = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        File dir = chooser.getSelectedFile();
+                        beanPath = dir.getAbsolutePath();
+                        fieldBeanMap = OtherUtils.analysisJavabeanFileToMap(beanPath, charsetName);
+                        if (fieldBeanMap == null) {
+                            JOptionPane.showMessageDialog(null, "配置bean信息读取失败！请重新选择", "错误", JOptionPane.ERROR_MESSAGE);
+                            return;
+                        }
+//                    String beanName = dir.getName();
+                        javaBeanNameTextArea.setText(dir.getAbsolutePath());
                     }
-                    String beanName = dir.getName();
-                    javaBeanNameLabel.setText("JavaBean:" + beanName);
-                }
-            });
-            t.start();
+                });
+                t.start();
+            }
         }
     }
 
@@ -355,39 +371,39 @@ public class MainJPanel extends JPanel {
         s.fill = GridBagConstraints.BOTH;
 
 
-        javaBeanNameLabel.setPreferredSize(new Dimension(200, 20));
-        javaBeanNameLabel.setForeground(Color.red);
-        northPanel.add(javaBeanNameLabel);
+        javaBeanNameTextArea.setPreferredSize(new Dimension(200, 30));
+        javaBeanNameTextArea.setForeground(Color.red);
+        northPanel.add(javaBeanNameTextArea);
 
-        s.gridwidth = 1;// 该方法是设置组件水平所占用的格子数，如果为0，就说明该组件是该行的最后一个
-        s.weightx = 0;// 该方法设置组件水平的拉伸幅度，如果为0就说明不拉伸，不为0就随着窗口增大进行拉伸，0到1之间
+        s.gridwidth = 0;// 该方法是设置组件水平所占用的格子数，如果为0，就说明该组件是该行的最后一个
+        s.weightx = 1;// 该方法设置组件水平的拉伸幅度，如果为0就说明不拉伸，不为0就随着窗口增大进行拉伸，0到1之间
         s.weighty = 0;// 该方法设置组件垂直的拉伸幅度，如果为0就说明不拉伸，不为0就随着窗口增大进行拉伸，0到1之间
-        layout.setConstraints(javaBeanNameLabel, s);// 设置组件
+        layout.setConstraints(javaBeanNameTextArea, s);// 设置组件
 
         browseButton.setPreferredSize(new Dimension(150, 25));
         s.gridwidth = 1;// 该方法是设置组件水平所占用的格子数，如果为0，就说明该组件是该行的最后一个
-        s.weightx = 0;// 该方法设置组件水平的拉伸幅度，如果为0就说明不拉伸，不为0就随着窗口增大进行拉伸，0到1之间
+        s.weightx = 0.25;// 该方法设置组件水平的拉伸幅度，如果为0就说明不拉伸，不为0就随着窗口增大进行拉伸，0到1之间
         s.weighty = 0;// 该方法设置组件垂直的拉伸幅度，如果为0就说明不拉伸，不为0就随着窗口增大进行拉伸，0到1之间
         layout.setConstraints(browseButton, s);// 设置组件
         northPanel.add(browseButton);
 
         chooseJavaBeanButton.setPreferredSize(new Dimension(150, 25));
         s.gridwidth = 1;// 该方法是设置组件水平所占用的格子数，如果为0，就说明该组件是该行的最后一个
-        s.weightx = 0;// 该方法设置组件水平的拉伸幅度，如果为0就说明不拉伸，不为0就随着窗口增大进行拉伸，0到1之间
+        s.weightx = 0.25;// 该方法设置组件水平的拉伸幅度，如果为0就说明不拉伸，不为0就随着窗口增大进行拉伸，0到1之间
         s.weighty = 0;// 该方法设置组件垂直的拉伸幅度，如果为0就说明不拉伸，不为0就随着窗口增大进行拉伸，0到1之间
         layout.setConstraints(chooseJavaBeanButton, s);// 设置组件
         northPanel.add(chooseJavaBeanButton);
 
         addTplFileButton.setPreferredSize(new Dimension(150, 25));
         s.gridwidth = 1;// 该方法是设置组件水平所占用的格子数，如果为0，就说明该组件是该行的最后一个
-        s.weightx = 0;// 该方法设置组件水平的拉伸幅度，如果为0就说明不拉伸，不为0就随着窗口增大进行拉伸，0到1之间
+        s.weightx = 0.25;// 该方法设置组件水平的拉伸幅度，如果为0就说明不拉伸，不为0就随着窗口增大进行拉伸，0到1之间
         s.weighty = 0;// 该方法设置组件垂直的拉伸幅度，如果为0就说明不拉伸，不为0就随着窗口增大进行拉伸，0到1之间
         layout.setConstraints(addTplFileButton, s);// 设置组件
         northPanel.add(addTplFileButton);
 
         addReNameButton.setPreferredSize(new Dimension(150, 25));
         s.gridwidth = 0;// 该方法是设置组件水平所占用的格子数，如果为0，就说明该组件是该行的最后一个
-        s.weightx = 0;// 该方法设置组件水平的拉伸幅度，如果为0就说明不拉伸，不为0就随着窗口增大进行拉伸，0到1之间
+        s.weightx = 0.25;// 该方法设置组件水平的拉伸幅度，如果为0就说明不拉伸，不为0就随着窗口增大进行拉伸，0到1之间
         s.weighty = 0;// 该方法设置组件垂直的拉伸幅度，如果为0就说明不拉伸，不为0就随着窗口增大进行拉伸，0到1之间
         layout.setConstraints(addReNameButton, s);// 设置组件
         northPanel.add(addReNameButton);
@@ -401,7 +417,7 @@ public class MainJPanel extends JPanel {
 
         oldFileNameTextArea.setPreferredSize(new Dimension(150, 25));
         s.gridwidth = 1;// 该方法是设置组件水平所占用的格子数，如果为0，就说明该组件是该行的最后一个
-        s.weightx = 0;// 该方法设置组件水平的拉伸幅度，如果为0就说明不拉伸，不为0就随着窗口增大进行拉伸，0到1之间
+        s.weightx = 0.5;// 该方法设置组件水平的拉伸幅度，如果为0就说明不拉伸，不为0就随着窗口增大进行拉伸，0到1之间
         s.weighty = 0;// 该方法设置组件垂直的拉伸幅度，如果为0就说明不拉伸，不为0就随着窗口增大进行拉伸，0到1之间
         layout.setConstraints(oldFileNameTextArea, s);// 设置组件
         northPanel.add(oldFileNameTextArea);
@@ -416,7 +432,7 @@ public class MainJPanel extends JPanel {
 
         newFileNameTextArea.setPreferredSize(new Dimension(150, 25));
         s.gridwidth = 0;// 该方法是设置组件水平所占用的格子数，如果为0，就说明该组件是该行的最后一个
-        s.weightx = 0;// 该方法设置组件水平的拉伸幅度，如果为0就说明不拉伸，不为0就随着窗口增大进行拉伸，0到1之间
+        s.weightx = 0.5;// 该方法设置组件水平的拉伸幅度，如果为0就说明不拉伸，不为0就随着窗口增大进行拉伸，0到1之间
         s.weighty = 0;// 该方法设置组件垂直的拉伸幅度，如果为0就说明不拉伸，不为0就随着窗口增大进行拉伸，0到1之间
         layout.setConstraints(newFileNameTextArea, s);// 设置组件
         northPanel.add(newFileNameTextArea);
