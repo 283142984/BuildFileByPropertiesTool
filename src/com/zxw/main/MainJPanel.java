@@ -453,7 +453,7 @@ public class MainJPanel extends JPanel {
             JTextArea oldNametextArea = reNamePaneBean.getOldNametextArea();
             oldNametextArea.setPreferredSize(new Dimension(150, 25));
             s.gridwidth = 1;// 该方法是设置组件水平所占用的格子数，如果为0，就说明该组件是该行的最后一个
-            s.weightx = 0;// 该方法设置组件水平的拉伸幅度，如果为0就说明不拉伸，不为0就随着窗口增大进行拉伸，0到1之间
+            s.weightx = 0.25;// 该方法设置组件水平的拉伸幅度，如果为0就说明不拉伸，不为0就随着窗口增大进行拉伸，0到1之间
             s.weighty = 0;// 该方法设置组件垂直的拉伸幅度，如果为0就说明不拉伸，不为0就随着窗口增大进行拉伸，0到1之间
             layout.setConstraints(oldNametextArea, s);// 设置组件
             northPanel.add(oldNametextArea);
@@ -470,7 +470,7 @@ public class MainJPanel extends JPanel {
             JTextArea newNametextArea = reNamePaneBean.getNewNametextArea();
             newNametextArea.setPreferredSize(new Dimension(150, 25));
             s.gridwidth = 1;// 该方法是设置组件水平所占用的格子数，如果为0，就说明该组件是该行的最后一个
-            s.weightx = 0;// 该方法设置组件水平的拉伸幅度，如果为0就说明不拉伸，不为0就随着窗口增大进行拉伸，0到1之间
+            s.weightx = 0.25;// 该方法设置组件水平的拉伸幅度，如果为0就说明不拉伸，不为0就随着窗口增大进行拉伸，0到1之间
             s.weighty = 0;// 该方法设置组件垂直的拉伸幅度，如果为0就说明不拉伸，不为0就随着窗口增大进行拉伸，0到1之间
             layout.setConstraints(newNametextArea, s);// 设置组件
             northPanel.add(newNametextArea);
